@@ -1,17 +1,17 @@
 package endpoints
 
 import (
-	api_v1 "k8s.io/api/core/v1"
 	"fmt"
+	api_v1 "k8s.io/api/core/v1"
 )
 
 type Endpoints struct {
 	Name      string
 	Namespace string
-	IPs       []string
+	Subsets   []string
 }
 
-func Transform(ep *api_v1.Endpoints) (string, Endpoints) {
+func Build(ep *api_v1.Endpoints) (string, Endpoints) {
 	key := fmt.Sprintf("%s.%s", ep.Name, ep.Namespace)
 
 	value := Endpoints{
@@ -22,7 +22,7 @@ func Transform(ep *api_v1.Endpoints) (string, Endpoints) {
 	for _, sub := range ep.Subsets {
 		for _, ip := range sub.Addresses {
 			//d.logger.Infof("%s %s %s", ep.Name, ep.Namespace, ip.IP)
-			value.IPs = append(value.IPs, ip.IP)
+			value.Subsets = append(value.Subsets, ip.IP)
 		}
 	}
 

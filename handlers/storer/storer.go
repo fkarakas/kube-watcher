@@ -1,6 +1,7 @@
 package storer
 
 import (
+	//"github.com/kr/pretty"
 	"kube-watcher/config"
 	"kube-watcher/handlers/storer/endpoints"
 	"sync"
@@ -10,8 +11,14 @@ import (
 )
 
 type Storer struct {
-	enpoints sync.Map
-	logger   *logrus.Entry
+	endpoints sync.Map
+	logger    *logrus.Entry
+}
+
+func (d *Storer) GetEndpoint(key string) (interface{}, bool) {
+	d.logger.Infof("getting endpoint %v", key)
+	//pretty.Println(d.endpoints)
+	return d.endpoints.Load(key)
 }
 
 func (d *Storer) Init(c *config.Config) error {
@@ -23,23 +30,24 @@ func (d *Storer) ObjectCreated(obj interface{}) {
 	d.logger.Info("[Storer Handler] ObjectCreated")
 	switch kobj := obj.(type) {
 	case *api_v1.Endpoints:
-		d.enpoints.Store(endpoints.Transform(kobj))
+		d.endpoints.Store(endpoints.Build(kobj))
 	}
 }
 
 func (d *Storer) ObjectDeleted(obj interface{}) {
 	d.logger.Info("[Storer Handler] ObjectDeleted")
-	switch ep := obj.(type) {
+	switch kobj := obj.(type) {
 	case *api_v1.Endpoints:
-		d.showIPs(ep)
+		key, _ := endpoints.Build(kobj)
+		d.endpoints.Delete(key)
 	}
 }
 
 func (d *Storer) ObjectUpdated(obj interface{}) {
 	d.logger.Info("[Storer Handler] ObjectUpdated")
-	switch ep := obj.(type) {
+	switch kobj := obj.(type) {
 	case *api_v1.Endpoints:
-		d.showIPs(ep)
+		d.endpoints.Store(endpoints.Build(kobj))
 	}
 }
 
